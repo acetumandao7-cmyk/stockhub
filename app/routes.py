@@ -1,28 +1,21 @@
 from flask import Blueprint, render_template, redirect, url_for, request, flash
 from flask_login import login_user, logout_user, login_required, current_user
 from werkzeug.security import generate_password_hash, check_password_hash
-from app import db
+from app import db, mail
 from app.models import User, Product, Category, Supplier, Transaction
 from datetime import date
 from sqlalchemy import func
-import requests
+from flask_mail import Message
 
 main = Blueprint('main', __name__)
 
-def send_sms_notification(number, message):
-    if not number:
-        return
+def send_email_notification(subject, recipient_email, body_message):
     try:
-        payload = {
-            'apikey': '1ff62014a0425fc5e3f771c7d792bec9', 
-            'number': number,      
-            'message': message,
-            'sendername': 'StockHub' 
-        }
-        response = requests.post('https://api.semaphore.co/api/v4/messages', data=payload)
-        return response.json()
+        msg = Message(subject, recipients=[recipient_email])
+        msg.body = body_message
+        mail.send(msg)
     except Exception as e:
-        print(f"Failed to send SMS: {e}")
+        print(f"Failed to send email exception: {e}")
 
 @main.route('/')
 @main.route('/login', methods=['GET', 'POST'])
@@ -133,12 +126,9 @@ def add_product():
     db.session.commit()
 
     if quantity <= 5:
-        admin_user = User.query.filter_by(role='Admin').first()
-        if admin_user and admin_user.contact_no:
-            send_sms_notification(
-                admin_user.contact_no,
-                f'StockHub Alert: New product "{name}" added with low stock ({quantity} left).'
-            )
+        admin_email = "ace.tumandao7@gmail.com"
+        body = f"""StockHub Alert: New product "{name}" added with low stock ({quantity} left).\nExecuted by: {current_user.full_name} ({current_user.role})"""
+        send_email_notification(f"Low Stock Alert: {name}", admin_email, body)
 
     flash(f'Product "{name}" added successfully!', 'success')
     return redirect(url_for('main.products'))
@@ -174,12 +164,9 @@ def edit_product(id):
     db.session.commit()
 
     if quantity <= 5:
-        admin_user = User.query.filter_by(role='Admin').first()
-        if admin_user and admin_user.contact_no:
-            send_sms_notification(
-                admin_user.contact_no,
-                f'StockHub Warning: Product "{name}" updated. Critical stock level: {quantity}.'
-            )
+        admin_email = "ace.tumandao7@gmail.com"
+        body = f"""StockHub Warning: Product "{name}" updated. Critical stock level: {quantity}.\nExecuted by: {current_user.full_name} ({current_user.role})"""
+        send_email_notification(f"Critical Stock Warning: {name}", admin_email, body)
 
     flash(f'Product "{name}" updated successfully!', 'success')
     return redirect(url_for('main.products'))
@@ -305,6 +292,15 @@ def stock_in():
     )
     db.session.add(txn)
     db.session.commit()
+
+    admin_email = "ace.tumandao7@gmail.com"
+    body = f"""[STOCKHUB TRANSACTION - STOCK IN]
+Product: {product.name}
+Quantity Added: {quantity}
+New Total Stock: {product.quantity}
+Executed By: {current_user.full_name} ({current_user.role})"""
+    send_email_notification(f"Stock In: {product.name}", admin_email, body)
+
     flash(f'Successfully added {quantity} unit(s) to "{product.name}".', 'success')
     return redirect(url_for('main.transactions'))
 
@@ -335,13 +331,17 @@ def stock_out():
         db.session.add(txn)
         db.session.commit()
 
+        admin_email = "ace.tumandao7@gmail.com"
+        body = f"""[STOCKHUB TRANSACTION - STOCK OUT]
+Product: {product.name}
+Quantity Deducted: {quantity}
+Remaining Stock: {product.quantity}
+Executed By: {current_user.full_name} ({current_user.role})"""
+        
         if product.quantity <= 5:
-            admin_user = User.query.filter_by(role='Admin').first()
-            if admin_user and admin_user.contact_no:
-                send_sms_notification(
-                    admin_user.contact_no,
-                    f'StockHub CRITICAL: "{product.name}" stock-out triggered low stock. Remaining: {product.quantity}.'
-                )
+            body += f"\n\nCRITICAL WARNING: Product '{product.name}' has reached low stock level ({product.quantity} left)!"
+
+        send_email_notification(f"Stock Out Alert: {product.name}", admin_email, body)
 
         flash(f'Successfully deducted {quantity} unit(s) from "{product.name}".', 'success')
     else:
@@ -382,12 +382,6 @@ def add_user():
     )
     db.session.add(new_user)
     db.session.commit()
-
-    if contact_no:
-        send_sms_notification(
-            contact_no,
-            f'Hello {full_name}, your StockHub account has been created successfully with role {role}.'
-        )
 
     flash(f'User account for "{full_name}" created successfully!', 'success')
     return redirect(url_for('main.users'))
