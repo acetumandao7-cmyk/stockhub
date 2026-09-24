@@ -1,12 +1,22 @@
 from flask import Blueprint, render_template, redirect, url_for, request, flash
 from flask_login import login_user, logout_user, login_required, current_user
 from werkzeug.security import generate_password_hash, check_password_hash
-from app import db
+from flask_mail import Message
+from app import db, mail
 from app.models import User, Product, Category, Supplier, Transaction
 from datetime import date
 from sqlalchemy import func
 
 main = Blueprint('main', __name__)
+
+def send_notification_email(subject, recipient, body):
+    """Helper function para magpadala ng email notification"""
+    try:
+        msg = Message(subject, sender=('StockHub Admin', 'noreply@stockhub.com'), recipients=[recipient])
+        msg.body = body
+        mail.send(msg)
+    except Exception as e:
+        print(f"Failed to send email: {e}")
 
 @main.route('/')
 @main.route('/login', methods=['GET', 'POST'])
@@ -117,6 +127,14 @@ def add_product():
     )
     db.session.add(new_product)
     db.session.commit()
+
+    if quantity <= 5:
+        send_notification_email(
+            subject=f'Low Stock Alert: {name}',
+            recipient='admin@stockhub.com',
+            body=f'The newly added product "{name}" has a low stock level of {quantity} units.'
+        )
+
     flash(f'Product "{name}" added successfully!', 'success')
     return redirect(url_for('main.products'))
 
@@ -149,6 +167,14 @@ def edit_product(id):
     product.price = price
 
     db.session.commit()
+
+    if quantity <= 5:
+        send_notification_email(
+            subject=f'Low Stock Alert: {name}',
+            recipient='admin@stockhub.com',
+            body=f'Product "{name}" updated. Current stock level is now critical at {quantity} units.'
+        )
+
     flash(f'Product "{name}" updated successfully!', 'success')
     return redirect(url_for('main.products'))
 
@@ -302,6 +328,14 @@ def stock_out():
         )
         db.session.add(txn)
         db.session.commit()
+
+        if product.quantity <= 5:
+            send_notification_email(
+                subject=f'CRITICAL: Low Stock Warning for {product.name}',
+                recipient='admin@stockhub.com',
+                body=f'A stock out transaction triggered a low stock warning. Product: "{product.name}" now has only {product.quantity} remaining unit(s).'
+            )
+
         flash(f'Successfully deducted {quantity} unit(s) from "{product.name}".', 'success')
     else:
         flash(f'Insufficient stock for "{product.name}"! Current stock is only {product.quantity}.', 'danger')
@@ -341,6 +375,13 @@ def add_user():
     )
     db.session.add(new_user)
     db.session.commit()
+
+    send_notification_email(
+        subject='New User Account Created',
+        recipient='admin@stockhub.com',
+        body=f'A new account for {full_name} ({username}) with role {role} has been successfully created.'
+    )
+
     flash(f'User account for "{full_name}" created successfully!', 'success')
     return redirect(url_for('main.users'))
 
