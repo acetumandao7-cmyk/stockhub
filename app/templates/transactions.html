@@ -1,0 +1,123 @@
+{% extends "base.html" %}
+
+{% block page_title %}Inventory Transactions Log{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-3">
+    <div>
+        <button class="btn btn-success me-2" data-bs-toggle="modal" data-bs-target="#stockInModal">
+            <i class="fa-solid fa-arrow-down me-1"></i> Stock In
+        </button>
+        <button class="btn btn-danger" data-bs-toggle="modal" data-bs-target="#stockOutModal">
+            <i class="fa-solid fa-arrow-up me-1"></i> Stock Out
+        </button>
+    </div>
+</div>
+
+<div class="card shadow-sm border-0 p-3">
+    <div class="table-responsive">
+        <table class="table table-hover align-middle">
+            <thead class="table-light">
+                <tr>
+                    <th>Transaction ID</th>
+                    <th>Type</th>
+                    <th>Product</th>
+                    <th>Quantity</th>
+                    <th>Date & Time</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for txn in transactions %}
+                <tr>
+                    <td>TXN-{{ txn.id }}</td>
+                    <td>
+                        {% if txn.transaction_type == 'STOCK_IN' %}
+                            <span class="badge bg-success">STOCK IN</span>
+                        {% else %}
+                            <span class="badge bg-danger">STOCK OUT</span>
+                        {% endif %}
+                    </td>
+                    <td class="fw-bold">{{ txn.product.name if txn.product else 'Deleted Product' }}</td>
+                    <td>
+                        {% if txn.transaction_type == 'STOCK_IN' %}
+                            +{{ txn.quantity }}
+                        {% else %}
+                            -{{ txn.quantity }}
+                        {% endif %}
+                    </td>
+                    <td>{{ txn.timestamp.strftime('%Y-%m-%d %I:%M %p') }}</td>
+                </tr>
+                {% else %}
+                <tr>
+                    <td colspan="5" class="text-center text-muted py-4">No transactions logged yet.</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<div class="modal fade" id="stockInModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <form action="{{ url_for('main.stock_in') }}" method="POST">
+                <div class="modal-header">
+                    <h5 class="modal-title fw-bold text-success"><i class="fa-solid fa-arrow-down me-1"></i> Process Stock In</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label class="form-label font-weight-bold">Select Product</label>
+                        <select name="product_id" class="form-select" required>
+                            <option value="">-- Choose Product --</option>
+                            {% for product in products %}
+                                <option value="{{ product.id }}">{{ product.name }} (Current: {{ product.quantity }})</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label font-weight-bold">Quantity to Add</label>
+                        <input type="number" name="quantity" class="form-control" min="1" value="1" required>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-success">Confirm Stock In</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="stockOutModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <form action="{{ url_for('main.stock_out') }}" method="POST">
+                <div class="modal-header">
+                    <h5 class="modal-title fw-bold text-danger"><i class="fa-solid fa-arrow-up me-1"></i> Process Stock Out</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label class="form-label font-weight-bold">Select Product</label>
+                        <select name="product_id" class="form-select" required>
+                            <option value="">-- Choose Product --</option>
+                            {% for product in products %}
+                                <option value="{{ product.id }}">{{ product.name }} (Current: {{ product.quantity }})</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label font-weight-bold">Quantity to Deduct</label>
+                        <input type="number" name="quantity" class="form-control" min="1" value="1" required>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-danger">Confirm Stock Out</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

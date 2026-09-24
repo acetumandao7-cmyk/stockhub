@@ -1,0 +1,108 @@
+{% extends "base.html" %}
+
+{% block page_title %}Dashboard Overview{% endblock %}
+
+{% block content %}
+<div class="row g-3 mb-4">
+    <div class="col-md-3">
+        <div class="card shadow-sm border-0 p-3 d-flex flex-row align-items-center">
+            <div class="rounded-circle bg-primary text-white p-3 me-3">
+                <i class="fa-solid fa-box fa-2x"></i>
+            </div>
+            <div>
+                <small class="text-muted fw-bold">Total Products</small>
+                <h3 class="fw-bold mb-0">{{ total_products }}</h3>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card shadow-sm border-0 p-3 d-flex flex-row align-items-center">
+            <div class="rounded-circle bg-warning text-white p-3 me-3">
+                <i class="fa-solid fa-triangle-exclamation fa-2x"></i>
+            </div>
+            <div>
+                <small class="text-muted fw-bold">Low Stock Alert</small>
+                <h3 class="fw-bold mb-0 text-warning">{{ low_stock_count }}</h3>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card shadow-sm border-0 p-3 d-flex flex-row align-items-center">
+            <div class="rounded-circle bg-success text-white p-3 me-3">
+                <i class="fa-solid fa-arrow-down fa-2x"></i>
+            </div>
+            <div>
+                <small class="text-muted fw-bold">Stock In (Today)</small>
+                <h3 class="fw-bold mb-0 text-success">{{ stock_in_today }}</h3>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card shadow-sm border-0 p-3 d-flex flex-row align-items-center">
+            <div class="rounded-circle bg-danger text-white p-3 me-3">
+                <i class="fa-solid fa-arrow-up fa-2x"></i>
+            </div>
+            <div>
+                <small class="text-muted fw-bold">Stock Out (Today)</small>
+                <h3 class="fw-bold mb-0 text-danger">{{ stock_out_today }}</h3>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row g-4">
+    <div class="col-md-8">
+        <div class="card shadow-sm border-0 p-3">
+            <h5 class="fw-bold mb-3"><i class="fa-solid fa-clock-rotate-left me-2 text-primary"></i>Recent Transactions</h5>
+            <div class="table-responsive">
+                <table class="table table-hover align-middle">
+                    <thead class="table-light">
+                        <tr>
+                            <th>Type</th>
+                            <th>Product</th>
+                            <th>Qty</th>
+                            <th>Date</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for txn in recent_txns %}
+                        <tr>
+                            <td>
+                                {% if txn.transaction_type == 'STOCK_IN' %}
+                                    <span class="badge bg-success">IN</span>
+                                {% else %}
+                                    <span class="badge bg-danger">OUT</span>
+                                {% endif %}
+                            </td>
+                            <td class="fw-bold">{{ txn.product.name if txn.product else 'N/A' }}</td>
+                            <td>{{ txn.quantity }}</td>
+                            <td>{{ txn.timestamp.strftime('%Y-%m-%d %I:%M %p') }}</td>
+                        </tr>
+                        {% else %}
+                        <tr>
+                            <td colspan="4" class="text-center text-muted py-3">No recent transactions.</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-4">
+        <div class="card shadow-sm border-0 p-3">
+            <h5 class="fw-bold text-danger mb-3"><i class="fa-solid fa-triangle-exclamation me-2"></i>Low Stock Items</h5>
+            <ul class="list-group list-group-flush">
+                {% for item in low_stock_items %}
+                <li class="list-group-item d-flex justify-content-between align-items-center px-0">
+                    <span class="fw-bold">{{ item.name }}</span>
+                    <span class="badge bg-danger rounded-pill">{{ item.quantity }} left</span>
+                </li>
+                {% else %}
+                <li class="list-group-item text-muted text-center py-3">All products are well stocked!</li>
+                {% endfor %}
+            </ul>
+        </div>
+    </div>
+</div>
+{% endblock %}

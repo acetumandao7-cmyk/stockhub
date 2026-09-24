@@ -1,0 +1,46 @@
+body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background-color: #f8fafc;
+}
+
+.bg-dark-blue {
+    background-color: #1e293b;
+}
+
+#sidebar-wrapper {
+    min-height: 100vh;
+    width: 250px;
+}
+
+#sidebar-wrapper .list-group-item {
+    border: none;
+    font-size: 0.95rem;
+    transition: all 0.2s ease-in-out;
+}
+
+#sidebar-wrapper .list-group-item:hover,
+#sidebar-wrapper .list-group-item.active {
+    background-color: #0f172a !important;
+    color: #3b82f6 !important;
+    border-left: 4px solid #3b82f6;
+}
+
+.card {
+    border-radius: 8px;
+    border: 1px solid #e2e8f0;
+}
+
+.badge-in-stock {
+    background-color: #dcfce7;
+    color: #15803d;
+}
+
+.badge-low-stock {
+    background-color: #fef9c3;
+    color: #a16207;
+}
+
+.badge-out-of-stock {
+    background-color: #fee2e2;
+    color: #b91c1c;
+}
