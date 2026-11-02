@@ -275,8 +275,12 @@ def stock_in():
     product = Product.query.get_or_404(product_id)
     product.quantity += int(quantity)
     
-    # Gumawa ng transaction log
-    transaction = Transaction(product_id=product.id, type='STOCK IN', quantity=quantity, user_id=current_user.id)
+    transaction = Transaction(
+        product_id=product.id, 
+        transaction_type='STOCK IN', 
+        quantity=quantity, 
+        user_id=current_user.id
+    )
     db.session.add(transaction)
     db.session.commit()
     
