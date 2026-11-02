@@ -346,6 +346,7 @@ Executed By: {current_user.full_name} ({current_user.role})"""
 @login_required
 def stock_out():
     current_app.logger.warning("========== STOCK OUT ROUTE HIT ==========")
+
     product_id = request.form.get('product_id', type=int)
     quantity = request.form.get('quantity', type=int)
 
@@ -358,6 +359,7 @@ def stock_out():
         return redirect(url_for('main.transactions'))
 
     product = Product.query.get_or_404(product_id)
+
     if product.quantity >= quantity:
         product.quantity -= quantity
 
@@ -367,31 +369,63 @@ def stock_out():
             product_id=product.id,
             user_id=current_user.id
         )
+
         db.session.add(txn)
         db.session.commit()
 
         admin_email = current_app.config.get('ADMIN_EMAIL')
+
+        current_app.logger.warning(
+            "STOCK OUT ADMIN_EMAIL configured: %s",
+            bool(admin_email)
+        )
+
         body = f"""[STOCKHUB TRANSACTION - STOCK OUT]
 Product: {product.name}
 Quantity Deducted: {quantity}
 Remaining Stock: {product.quantity}
 Executed By: {current_user.full_name} ({current_user.role})"""
-        
+
         if product.quantity <= 5:
-            body += f"\n\nCRITICAL WARNING: Product '{product.name}' has reached low stock level ({product.quantity} left)!"
+            body += (
+                f"\n\nCRITICAL WARNING: Product '{product.name}' "
+                f"has reached low stock level ({product.quantity} left)!"
+            )
 
         if admin_email:
-            send_email_notification(f"Stock Out Alert: {product.name}", admin_email, body)
-        else:
-            current_app.logger.warning("ADMIN_EMAIL is not configured; stock-out email skipped.")
-            current_app.logger.warning(
-    "DEBUG ADMIN_EMAIL: %r",
-    current_app.config.get('ADMIN_EMAIL')
-)
+            try:
+                send_email_notification(
+                    f"Stock Out Alert: {product.name}",
+                    admin_email,
+                    body
+                )
 
-        flash(f'Successfully deducted {quantity} unit(s) from "{product.name}".', 'success')
+                current_app.logger.info(
+                    "Stock Out email notification triggered."
+                )
+
+            except Exception:
+                current_app.logger.exception(
+                    "Failed to trigger Stock Out email notification."
+                )
+
+        else:
+            current_app.logger.warning(
+                "ADMIN_EMAIL is missing; Stock Out email skipped."
+            )
+
+        flash(
+            f'Successfully deducted {quantity} unit(s) from "{product.name}".',
+            'success'
+        )
+
     else:
-        flash(f'Insufficient stock for "{product.name}"! Current stock is only {product.quantity}.', 'danger')
+        flash(
+            f'Insufficient stock for "{product.name}"! '
+            f'Current stock is only {product.quantity}.',
+            'danger'
+        )
+
     return redirect(url_for('main.transactions'))
 
 @main.route('/users')
