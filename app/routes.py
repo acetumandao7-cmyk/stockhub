@@ -269,38 +269,18 @@ def transactions():
 @main.route('/transactions/stock_in', methods=['POST'])
 @login_required
 def stock_in():
-    product_id = request.form.get('product_id', type=int)
-    quantity = request.form.get('quantity', type=int)
-
-    if not product_id:
-        flash('Please select a product!', 'danger')
-        return redirect(url_for('main.transactions'))
-
-    if quantity is None or quantity <= 0:
-        flash('Quantity must be greater than zero!', 'danger')
-        return redirect(url_for('main.transactions'))
-
+    product_id = request.form.get('product_id')
+    quantity = request.form.get('quantity')
+    
     product = Product.query.get_or_404(product_id)
-    product.quantity += quantity
-
-    txn = Transaction(
-        transaction_type='STOCK_IN',
-        quantity=quantity,
-        product_id=product.id,
-        user_id=current_user.id
-    )
-    db.session.add(txn)
+    product.quantity += int(quantity)
+    
+    # Gumawa ng transaction log
+    transaction = Transaction(product_id=product.id, type='STOCK IN', quantity=quantity, user_id=current_user.id)
+    db.session.add(transaction)
     db.session.commit()
-
-    admin_email = "ace.tumandao7@gmail.com"
-    body = f"""[STOCKHUB TRANSACTION - STOCK IN]
-Product: {product.name}
-Quantity Added: {quantity}
-New Total Stock: {product.quantity}
-Executed By: {current_user.full_name} ({current_user.role})"""
-    send_email_notification(f"Stock In: {product.name}", admin_email, body)
-
-    flash(f'Successfully added {quantity} unit(s) to "{product.name}".', 'success')
+    
+    flash('Stock added successfully!', 'success')
     return redirect(url_for('main.transactions'))
 
 @main.route('/transactions/stock_out', methods=['POST'])
