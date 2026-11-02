@@ -21,12 +21,40 @@ def _send_email_async(app, subject, recipient, body):
 
 def send_email_notification(subject, recipient, body):
     app = current_app._get_current_object()
-    thread = Thread(
-        target=_send_email_async,
-        args=(app, subject, recipient, body),
-        daemon=True
-    )
-    thread.start()
+
+    with app.app_context():
+        try:
+            app.logger.warning("========== SMTP SEND START ==========")
+            app.logger.warning("SMTP recipient: %s", recipient)
+            app.logger.warning("SMTP server: %s", app.config.get('MAIL_SERVER'))
+            app.logger.warning("SMTP port: %s", app.config.get('MAIL_PORT'))
+            app.logger.warning(
+                "SMTP username configured: %s",
+                bool(app.config.get('MAIL_USERNAME'))
+            )
+            app.logger.warning(
+                "SMTP password configured: %s",
+                bool(app.config.get('MAIL_PASSWORD'))
+            )
+            app.logger.warning(
+                "SMTP sender: %s",
+                app.config.get('MAIL_DEFAULT_SENDER')
+            )
+
+            msg = Message(
+                subject=subject,
+                recipients=[recipient],
+                body=body
+            )
+
+            mail.send(msg)
+
+            app.logger.warning("========== SMTP SEND SUCCESS ==========")
+            return True
+
+        except Exception:
+            app.logger.exception("========== SMTP SEND FAILED ==========")
+            return False
 
 @main.route('/')
 @main.route('/login', methods=['GET', 'POST'])
