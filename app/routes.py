@@ -14,7 +14,7 @@ def send_email_notification(subject, recipient, body):
         msg = Message(subject, recipients=[recipient], body=body)
         mail.send(msg)
     except Exception as e:
-        print(f"Email sending failed (ignored): {e}")
+        print(f"Email notification warning: {e}")
 
 @main.route('/')
 @main.route('/login', methods=['GET', 'POST'])
