@@ -137,9 +137,12 @@ def add_product():
     db.session.commit()
 
     if quantity <= 5:
-        admin_email = "dengpalajorin@gmail.com"
+        admin_email = current_app.config.get('dengpalajorin@gmail.com')
         body = f"""StockHub Alert: New product "{name}" added with low stock ({quantity} left).\nExecuted by: {current_user.full_name} ({current_user.role})"""
-        send_email_notification(f"Low Stock Alert: {name}", admin_email, body)
+        if admin_email:
+            send_email_notification(f"Low Stock Alert: {name}", admin_email, body)
+        else:
+            current_app.logger.warning("ADMIN_EMAIL is not configured; low-stock email skipped.")
 
     flash(f'Product "{name}" added successfully!', 'success')
     return redirect(url_for('main.products'))
@@ -175,9 +178,12 @@ def edit_product(id):
     db.session.commit()
 
     if quantity <= 5:
-        admin_email = "dengpalajorin@gmail.com"
+        admin_email = current_app.config.get('dengpalajorin@gmail.com')
         body = f"""StockHub Warning: Product "{name}" updated. Critical stock level: {quantity}.\nExecuted by: {current_user.full_name} ({current_user.role})"""
-        send_email_notification(f"Critical Stock Warning: {name}", admin_email, body)
+        if admin_email:
+            send_email_notification(f"Critical Stock Warning: {name}", admin_email, body)
+        else:
+            current_app.logger.warning("ADMIN_EMAIL is not configured; critical-stock email skipped.")
 
     flash(f'Product "{name}" updated successfully!', 'success')
     return redirect(url_for('main.products'))
@@ -305,6 +311,17 @@ def stock_in():
     db.session.add(transaction)
     db.session.commit()
 
+    admin_email = current_app.config.get('dengpalajorin@gmail.com')
+    body = f"""[STOCKHUB TRANSACTION - STOCK IN]
+Product: {product.name}
+Quantity Added: {quantity}
+Updated Stock: {product.quantity}
+Executed By: {current_user.full_name} ({current_user.role})"""
+    if admin_email:
+        send_email_notification(f"Stock In Alert: {product.name}", admin_email, body)
+    else:
+        current_app.logger.warning("ADMIN_EMAIL is not configured; stock-in email skipped.")
+
     flash(f'Successfully added {quantity} unit(s) to "{product.name}".', 'success')
     return redirect(url_for('main.transactions'))
 
@@ -335,7 +352,7 @@ def stock_out():
         db.session.add(txn)
         db.session.commit()
 
-        admin_email = "dengpalajorin@gmail.com"
+        admin_email = current_app.config.get('dengpalajorin@gmail.com')
         body = f"""[STOCKHUB TRANSACTION - STOCK OUT]
 Product: {product.name}
 Quantity Deducted: {quantity}
@@ -345,7 +362,10 @@ Executed By: {current_user.full_name} ({current_user.role})"""
         if product.quantity <= 5:
             body += f"\n\nCRITICAL WARNING: Product '{product.name}' has reached low stock level ({product.quantity} left)!"
 
-        send_email_notification(f"Stock Out Alert: {product.name}", admin_email, body)
+        if admin_email:
+            send_email_notification(f"Stock Out Alert: {product.name}", admin_email, body)
+        else:
+            current_app.logger.warning("ADMIN_EMAIL is not configured; stock-out email skipped.")
 
         flash(f'Successfully deducted {quantity} unit(s) from "{product.name}".', 'success')
     else:

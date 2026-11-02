@@ -9,23 +9,38 @@ db = SQLAlchemy()
 login_manager = LoginManager()
 mail = Mail()
 
+
 def create_app():
     app = Flask(__name__)
 
-    app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY', 'change-this-secret-key')
+    app.config['SECRET_KEY'] = os.environ.get(
+        'SECRET_KEY', 'change-this-secret-key'
+    )
+
     app.config['SQLALCHEMY_DATABASE_URI'] = os.environ.get(
         'DATABASE_URL', 'sqlite:///inventory.db'
     )
     app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
-    app.config['MAIL_SERVER'] = 'smtp.gmail.com'
-    app.config['MAIL_PORT'] = 587
-    app.config['MAIL_USE_TLS'] = True
-    app.config['MAIL_USE_SSL'] = False
-    app.config['MAIL_USERNAME'] = os.environ.get('dengpalajorin@gmail.com')
-    app.config['MAIL_PASSWORD'] = os.environ.get('hylzxammlnczfsou')
-    app.config['MAIL_DEFAULT_SENDER'] = os.environ.get('dengpalajorin@gmail.com')
-    app.config['MAIL_TIMEOUT'] = 10
+    app.config['MAIL_SERVER'] = os.environ.get(
+        'MAIL_SERVER', 'smtp-relay.brevo.com'
+    )
+    app.config['MAIL_PORT'] = int(os.environ.get('MAIL_PORT', '2525'))
+    app.config['MAIL_USE_TLS'] = os.environ.get(
+        'MAIL_USE_TLS', 'True'
+    ).lower() == 'true'
+    app.config['MAIL_USE_SSL'] = os.environ.get(
+        'MAIL_USE_SSL', 'False'
+    ).lower() == 'true'
+
+    app.config['MAIL_USERNAME'] = os.environ.get('MAIL_USERNAME')
+    app.config['MAIL_PASSWORD'] = os.environ.get('MAIL_PASSWORD')
+    app.config['MAIL_DEFAULT_SENDER'] = os.environ.get(
+        'MAIL_DEFAULT_SENDER'
+    )
+    app.config['MAIL_TIMEOUT'] = 20
+
+    app.config['ADMIN_EMAIL'] = os.environ.get('ADMIN_EMAIL')
 
     db.init_app(app)
     login_manager.init_app(app)
