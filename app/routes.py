@@ -345,6 +345,7 @@ Executed By: {current_user.full_name} ({current_user.role})"""
 @main.route('/transactions/stock_out', methods=['POST'])
 @login_required
 def stock_out():
+    current_app.logger.warning("========== STOCK OUT ROUTE HIT ==========")
     product_id = request.form.get('product_id', type=int)
     quantity = request.form.get('quantity', type=int)
 
