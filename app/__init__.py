@@ -35,9 +35,7 @@ def create_app():
 
     app.config['MAIL_USERNAME'] = os.environ.get('MAIL_USERNAME')
     app.config['MAIL_PASSWORD'] = os.environ.get('MAIL_PASSWORD')
-    app.config['MAIL_DEFAULT_SENDER'] = os.environ.get(
-        'MAIL_DEFAULT_SENDER'
-    )
+    app.config['MAIL_DEFAULT_SENDER'] = os.environ.get('MAIL_DEFAULT_SENDER')
     app.config['MAIL_TIMEOUT'] = 20
 
     app.config['ADMIN_EMAIL'] = os.environ.get('ADMIN_EMAIL')
