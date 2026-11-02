@@ -39,6 +39,10 @@ def create_app():
     app.config['MAIL_TIMEOUT'] = 20
 
     app.config['ADMIN_EMAIL'] = os.environ.get('ADMIN_EMAIL')
+    app.logger.warning(
+    "ADMIN_EMAIL configured: %s",
+    bool(app.config.get('ADMIN_EMAIL'))
+)
 
     db.init_app(app)
     login_manager.init_app(app)
