@@ -9,13 +9,12 @@ from flask_mail import Message
 
 main = Blueprint('main', __name__)
 
-def send_email_notification(subject, recipient_email, body_message):
+def send_email_notification(subject, recipient, body):
     try:
-        msg = Message(subject, recipients=[recipient_email])
-        msg.body = body_message
+        msg = Message(subject, recipients=[recipient], body=body)
         mail.send(msg)
     except Exception as e:
-        print(f"Failed to send email exception: {e}")
+        print(f"Email sending failed (ignored): {e}")
 
 @main.route('/')
 @main.route('/login', methods=['GET', 'POST'])
