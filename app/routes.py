@@ -311,22 +311,35 @@ def stock_in():
     db.session.add(transaction)
     db.session.commit()
 
-    admin_email = current_app.config.get('dengpalajorin@gmail.com')
+    admin_email = current_app.config.get('ADMIN_EMAIL')
+
+    current_app.logger.warning(
+        "DEBUG ADMIN_EMAIL configured: %s",
+        bool(admin_email)
+    )
+
     body = f"""[STOCKHUB TRANSACTION - STOCK IN]
 Product: {product.name}
 Quantity Added: {quantity}
 Updated Stock: {product.quantity}
 Executed By: {current_user.full_name} ({current_user.role})"""
-    if admin_email:
-        send_email_notification(f"Stock In Alert: {product.name}", admin_email, body)
-    else:
-        current_app.logger.warning("ADMIN_EMAIL is not configured; stock-in email skipped.")
-        current_app.logger.warning(
-    "DEBUG ADMIN_EMAIL: %r",
-    current_app.config.get('ADMIN_EMAIL')
-)
 
-    flash(f'Successfully added {quantity} unit(s) to "{product.name}".', 'success')
+    if admin_email:
+        send_email_notification(
+            f"Stock In Alert: {product.name}",
+            admin_email,
+            body
+        )
+    else:
+        current_app.logger.warning(
+            "ADMIN_EMAIL is not configured; stock-in email skipped."
+        )
+
+    flash(
+        f'Successfully added {quantity} unit(s) to "{product.name}".',
+        'success'
+    )
+
     return redirect(url_for('main.transactions'))
 
 @main.route('/transactions/stock_out', methods=['POST'])
