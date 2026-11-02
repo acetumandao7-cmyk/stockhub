@@ -321,6 +321,10 @@ Executed By: {current_user.full_name} ({current_user.role})"""
         send_email_notification(f"Stock In Alert: {product.name}", admin_email, body)
     else:
         current_app.logger.warning("ADMIN_EMAIL is not configured; stock-in email skipped.")
+        current_app.logger.warning(
+    "DEBUG ADMIN_EMAIL: %r",
+    current_app.config.get('ADMIN_EMAIL')
+)
 
     flash(f'Successfully added {quantity} unit(s) to "{product.name}".', 'success')
     return redirect(url_for('main.transactions'))
@@ -352,7 +356,7 @@ def stock_out():
         db.session.add(txn)
         db.session.commit()
 
-        admin_email = current_app.config.get('dengpalajorin@gmail.com')
+        admin_email = current_app.config.get('ADMIN_EMAIL')
         body = f"""[STOCKHUB TRANSACTION - STOCK OUT]
 Product: {product.name}
 Quantity Deducted: {quantity}
@@ -366,6 +370,10 @@ Executed By: {current_user.full_name} ({current_user.role})"""
             send_email_notification(f"Stock Out Alert: {product.name}", admin_email, body)
         else:
             current_app.logger.warning("ADMIN_EMAIL is not configured; stock-out email skipped.")
+            current_app.logger.warning(
+    "DEBUG ADMIN_EMAIL: %r",
+    current_app.config.get('ADMIN_EMAIL')
+)
 
         flash(f'Successfully deducted {quantity} unit(s) from "{product.name}".', 'success')
     else:
